@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Loader, TriangleAlert } from "lucide-react";
-
-import { useGetProject } from "@/features/projects/api/use-get-project";
 
 import { Editor } from "@/features/editor/components/editor";
 import { Button } from "@/components/ui/button";
@@ -12,18 +11,33 @@ interface EditorProjectIdPageProps {
   params: {
     projectId: string;
   };
-};
+}
 
 const EditorProjectIdPage = ({
   params,
 }: EditorProjectIdPageProps) => {
-  const { 
-    data, 
-    isLoading, 
-    isError
-  } = useGetProject(params.projectId);
+  const [project, setProject] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  if (isLoading || !data) {
+  useEffect(() => {
+    try {
+      const projects = JSON.parse(localStorage.getItem("projects") || "[]");
+      const project = projects.find((p: any) => p.id === params.projectId);
+      
+      if (!project) {
+        setError(true);
+      } else {
+        setProject(project);
+      }
+    } catch (error) {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [params.projectId]);
+
+  if (loading) {
     return (
       <div className="h-full flex flex-col items-center justify-center">
         <Loader className="size-6 animate-spin text-muted-foreground" />
@@ -31,7 +45,7 @@ const EditorProjectIdPage = ({
     );
   }
 
-  if (isError) {
+  if (error) {
     return (
       <div className="h-full flex flex-col gap-y-5 items-center justify-center">
         <TriangleAlert className="size-6 text-muted-foreground" />
@@ -47,7 +61,7 @@ const EditorProjectIdPage = ({
     );
   }
 
-  return <Editor initialData={data} />
+  return <Editor initialData={project} />;
 };
- 
+
 export default EditorProjectIdPage;

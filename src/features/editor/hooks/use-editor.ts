@@ -643,7 +643,25 @@ export const useEditor = ({
     setHistoryIndex,
   } = useHistory({ 
     canvas,
-    saveCallback
+    saveCallback: (values) => {
+      if (!values) return;
+
+      // Save to localStorage
+      const projects = JSON.parse(localStorage.getItem("projects") || "[]");
+      const projectId = window.location.pathname.split("/").pop();
+      const projectIndex = projects.findIndex((p: any) => p.id === projectId);
+
+      if (projectIndex !== -1) {
+        projects[projectIndex] = {
+          ...projects[projectIndex],
+          ...values,
+          updatedAt: new Date().toISOString(),
+        };
+        localStorage.setItem("projects", JSON.stringify(projects));
+      }
+
+      saveCallback?.(values);
+    }
   });
 
   const { copy, paste } = useClipboard({ canvas });
@@ -770,10 +788,7 @@ export const useEditor = ({
       canvasHistory.current = [currentState];
       setHistoryIndex(0);
     },
-    [
-      canvasHistory, // No need, this is from useRef
-      setHistoryIndex, // No need, this is from useState
-    ]
+    []
   );
 
   return { init, editor };
