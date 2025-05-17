@@ -2,32 +2,34 @@
 
 import { useRouter } from "next/navigation";
 import { ArrowRight, Loader2, Sparkles } from "lucide-react";
-
-import { useCreateProject } from "@/features/projects/api/use-create-project";
+import { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 
 export const Banner = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const mutation = useCreateProject();
 
   const onClick = () => {
     setLoading(true);
-    mutation.mutate(
-      {
-        name: "Untitled project",
-        json: "",
-        width: 900,
-        height: 1200,
-      },
-      {
-        onSuccess: ({ data }) => {
-          router.push(`/editor/${data.id}`);
-        },
-      }
-    );
+    const id = uuidv4();
+    
+    const project = {
+      id,
+      name: "Untitled project",
+      json: "",
+      width: 900,
+      height: 1200,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const projects = JSON.parse(localStorage.getItem("projects") || "[]");
+    projects.push(project);
+    localStorage.setItem("projects", JSON.stringify(projects));
+
+    router.push(`/editor/${id}`);
   };
 
   return (
@@ -38,12 +40,14 @@ export const Banner = () => {
         </div>
       </div>
       <div className="flex flex-col gap-y-2">
-        <h1 className="text-xl md:text-3xl font-semibold">Visualize your ideas with The Canvas</h1>
+        <h1 className="text-xl md:text-3xl font-semibold">
+          Visualize your ideas with The Canvas
+        </h1>
         <p className="text-xs md:text-sm mb-2">
           Turn inspiration into design in no time. Simply upload an image and let AI do the rest.
         </p>
         <Button
-          disabled={mutation.isPending}
+          disabled={loading}
           onClick={onClick}
           variant="secondary"
           className="w-[160px]"
